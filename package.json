@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "css": "tailwindcss -i ./styles/app.css -o ./public/app.css --minify",
-    "css:watch": "tailwindcss -i ./styles/app.css -o ./public/app.css --watch"
+    "css": "tailwindcss -i ./styles/app.css -o ./web/static/app.css --minify",
+    "css:watch": "tailwindcss -i ./styles/app.css -o ./web/static/app.css --watch"
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.3.3",

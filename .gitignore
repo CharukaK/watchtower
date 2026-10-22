@@ -1,4 +1,5 @@
 /build/
 /node_modules/
-/public/app.css
+/web/static/app.css
+/tmp/
 *_templ.go

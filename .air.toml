@@ -1,0 +1,25 @@
+root = "."
+tmp_dir = "tmp"
+
+[build]
+  bin = "./tmp/watchtower"
+  cmd = "go tool templ generate && npm run css && go build -o ./tmp/watchtower ./cmd/watchtower"
+  delay = 300
+  exclude_dir = ["build", "node_modules", "tmp"]
+  exclude_file = ["web/static/app.css"]
+  exclude_regex = [".*_templ.go"]
+  include_ext = ["css", "go", "js", "templ"]
+  kill_delay = "500ms"
+  send_interrupt = true
+  stop_on_error = true
+
+[log]
+  time = false
+
+[misc]
+  clean_on_exit = true
+
+[proxy]
+  enabled = true
+  proxy_port = 7331
+  app_port = 8080

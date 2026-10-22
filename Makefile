@@ -1,8 +1,11 @@
-.PHONY: build generate css test clean
+.PHONY: build dev generate css test clean
 
 build: generate css
 	@mkdir -p build
-	@go build -o build/watchtower ./cmd/watchtower
+	@CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o build/watchtower ./cmd/watchtower
+
+dev:
+	@go tool air
 
 generate:
 	@go tool templ generate
@@ -10,8 +13,8 @@ generate:
 css:
 	@npm run css
 
-test: generate
+test: generate css
 	@go test ./...
 
 clean:
-	@rm -rf build public/app.css
+	@rm -rf build tmp web/static/app.css
