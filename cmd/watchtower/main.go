@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"time"
@@ -10,6 +10,8 @@ import (
 )
 
 func main() {
+	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stdout, nil)))
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
@@ -21,6 +23,9 @@ func main() {
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
-	log.Printf("listening on http://localhost:%s", port)
-	log.Fatal(server.ListenAndServe())
+	slog.Info("server listening", "addr", server.Addr)
+	if err := server.ListenAndServe(); err != nil {
+		slog.Error("server stopped", "error", err)
+		os.Exit(1)
+	}
 }
