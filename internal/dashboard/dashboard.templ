@@ -1,12 +1,20 @@
 package dashboard
 
 import "github.com/CharukaK/watchtower/internal/ui"
+import "github.com/CharukaK/watchtower/internal/backend/isapi"
 
-templ Dashboard() {
+templ Dashboard(info isapi.DeviceInfo) {
 	@ui.MainLayout("Watchtower - Dashboard") {
 		<main>
-			<div>Main content</div>
+			<h1>{ info.Name }</h1>
+			<dl>
+				<dt>Model</dt>
+				<dd>{ info.Model }</dd>
+				<dt>Serial number</dt>
+				<dd>{ info.SerialNumber }</dd>
+				<dt>Firmware</dt>
+				<dd>{ info.Firmware }</dd>
+			</dl>
 		</main>
 	}
 }
-
