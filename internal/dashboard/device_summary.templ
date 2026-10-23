@@ -1,0 +1,15 @@
+package dashboard
+
+import "github.com/CharukaK/watchtower/internal/backend/isapi"
+
+templ deviceSummary(info isapi.DeviceInfo) {
+	<h1 class="text-3xl font-semibold">{ info.Name }</h1>
+	<dl class="mt-4 grid gap-x-8 gap-y-2 sm:grid-cols-[max-content_1fr]">
+		<dt class="font-medium">Model</dt>
+		<dd>{ info.Model }</dd>
+		<dt class="font-medium">Serial number</dt>
+		<dd>{ info.SerialNumber }</dd>
+		<dt class="font-medium">Firmware</dt>
+		<dd>{ info.Firmware }</dd>
+	</dl>
+}

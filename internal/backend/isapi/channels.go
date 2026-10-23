@@ -5,7 +5,10 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
+	"log/slog"
+	"mime"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -193,4 +196,51 @@ func (c *Client) GetChannelCapabilities(ctx context.Context, id string) (Streami
 	}
 
 	return result, nil
+}
+
+func (c *Client) GetPicture(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+
+	chanId := r.PathValue("id")
+
+	url := fmt.Sprintf("Streaming/channels/%s/picture", chanId)
+
+	resp, err := c.do(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		http.Error(w, "camera unavailable", http.StatusBadGateway)
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		http.Error(w, "camera rejected snapshot request", http.StatusBadGateway)
+		return
+	}
+
+	if !strings.HasPrefix(resp.Header.Get("Content-Type"), "image/jpeg") {
+		http.Error(w, "camera returned an unexpected response", http.StatusBadGateway)
+		return
+	}
+
+	filename := fmt.Sprintf("snapshot-%s-%s.jpg",
+		chanId,
+		time.Now().Format("20060102-150405"),
+	)
+	disposition := mime.FormatMediaType(
+		"attachment",
+		map[string]string{"filename": filename},
+	)
+
+	w.Header().Set("Content-Type", "image/jpeg")
+	w.Header().Set("Content-Disposition", disposition)
+
+	if length := resp.Header.Get("Content-Length"); length != "" {
+		w.Header().Set("Content-Length", length)
+	}
+
+	if _, err := io.Copy(w, resp.Body); err != nil {
+		slog.Error("error writing image", "error", err)
+		return
+	}
 }

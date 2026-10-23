@@ -32,6 +32,7 @@ func New(isapiClient *isapi.Client) http.Handler {
 		w.Header().Set("Datastar-Mode", "inner")
 		templ.Handler(dashboard.ChannelCapabilities(capability)).ServeHTTP(w, r)
 	})
+	mux.HandleFunc("GET /channels/{id}/picture", isapiClient.GetPicture)
 	mux.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
 		info, err := isapiClient.GetDeviceInfo(r.Context())
 		if err != nil {
