@@ -3,6 +3,7 @@ package app
 import (
 	"log/slog"
 	"net/http"
+	"strconv"
 
 	"github.com/CharukaK/watchtower/internal/backend/isapi"
 	"github.com/CharukaK/watchtower/internal/dashboard"
@@ -13,6 +14,24 @@ import (
 func New(isapiClient *isapi.Client) http.Handler {
 	mux := http.NewServeMux()
 	mux.Handle("GET /static/", http.FileServer(http.FS(web.Static)))
+	mux.HandleFunc("GET /channels/{id}/capabilities", func(w http.ResponseWriter, r *http.Request) {
+		id := r.PathValue("id")
+		if channelID, err := strconv.Atoi(id); err != nil || channelID < 1 {
+			http.Error(w, "invalid channel id", http.StatusBadRequest)
+			return
+		}
+
+		capability, err := isapiClient.GetChannelCapabilities(r.Context(), id)
+		if err != nil {
+			slog.WarnContext(r.Context(), "failed to get channel capabilities", "channel", id, "error", err)
+			http.Error(w, "capabilities unavailable", http.StatusBadGateway)
+			return
+		}
+
+		w.Header().Set("Datastar-Selector", "#channel-"+id+"-capabilities")
+		w.Header().Set("Datastar-Mode", "inner")
+		templ.Handler(dashboard.ChannelCapabilities(capability)).ServeHTTP(w, r)
+	})
 	mux.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
 		info, err := isapiClient.GetDeviceInfo(r.Context())
 		if err != nil {
@@ -20,7 +39,15 @@ func New(isapiClient *isapi.Client) http.Handler {
 			http.Error(w, "device unavailable", http.StatusBadGateway)
 			return
 		}
-		templ.Handler(dashboard.Dashboard(info)).ServeHTTP(w, r)
+
+		channels, err := isapiClient.GetChannels(r.Context())
+		if err != nil {
+			slog.ErrorContext(r.Context(), "failed to get channels information", "error", err)
+			http.Error(w, "error fetching channels", http.StatusBadGateway)
+			return
+		}
+
+		templ.Handler(dashboard.Dashboard(info, channels)).ServeHTTP(w, r)
 	})
 	return mux
 }

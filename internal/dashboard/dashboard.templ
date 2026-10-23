@@ -1,20 +1,116 @@
 package dashboard
 
+import "fmt"
 import "github.com/CharukaK/watchtower/internal/ui"
 import "github.com/CharukaK/watchtower/internal/backend/isapi"
 
-templ Dashboard(info isapi.DeviceInfo) {
+templ Dashboard(info isapi.DeviceInfo, channels []isapi.StreamingChannel) {
 	@ui.MainLayout("Watchtower - Dashboard") {
-		<main>
-			<h1>{ info.Name }</h1>
-			<dl>
-				<dt>Model</dt>
+		<main class="mx-auto max-w-6xl p-6">
+			<h1 class="text-3xl font-semibold">{ info.Name }</h1>
+			<dl class="mt-4 grid gap-x-8 gap-y-2 sm:grid-cols-[max-content_1fr]">
+				<dt class="font-medium">Model</dt>
 				<dd>{ info.Model }</dd>
-				<dt>Serial number</dt>
+				<dt class="font-medium">Serial number</dt>
 				<dd>{ info.SerialNumber }</dd>
-				<dt>Firmware</dt>
+				<dt class="font-medium">Firmware</dt>
 				<dd>{ info.Firmware }</dd>
 			</dl>
+			<h2 class="mt-10 text-2xl font-semibold">Channels</h2>
+			<div class="mt-4 overflow-x-auto rounded-lg border border-gray-200">
+				<table class="w-full text-left text-sm">
+					<thead class="bg-gray-100">
+						<tr>
+							<th class="px-4 py-3" scope="col">Channel</th>
+							<th class="px-4 py-3" scope="col">Status</th>
+							<th class="px-4 py-3" scope="col">Codec</th>
+							<th class="px-4 py-3" scope="col">Resolution</th>
+							<th class="px-4 py-3" scope="col">Audio</th>
+						</tr>
+					</thead>
+					for _, group := range groupChannels(channels) {
+						<tbody class="border-t border-gray-200">
+							<tr class="bg-gray-50">
+								<th class="px-4 py-2" colspan="5" scope="rowgroup">Input channel { fmt.Sprintf("%d", group.InputChannelID) }</th>
+							</tr>
+							for _, channel := range group.Channels {
+								<tr class="border-t border-gray-200">
+									<th class="px-4 py-3" scope="row">{ channel.Name }</th>
+									<td class="px-4 py-3">{ enabledLabel(channel.Enabled) }</td>
+									<td class="px-4 py-3">{ channel.Video.CodecType }</td>
+									<td class="px-4 py-3">{ fmt.Sprintf("%d × %d", channel.Video.ResolutionWidth, channel.Video.ResolutionHeight) }</td>
+									<td class="px-4 py-3">
+										if channel.Audio.Enabled {
+											{ channel.Audio.CompressionType }
+										} else {
+											Disabled
+										}
+									</td>
+								</tr>
+								<tr class="border-t border-gray-100">
+									<td class="px-4 py-3" colspan="5">
+										<details
+											data-on:toggle={ fmt.Sprintf("evt.target.open && @get('/channels/%d/capabilities')", channel.ID) }
+										>
+											<summary class="cursor-pointer font-medium">Settings and capabilities</summary>
+											<div class="mt-4 grid gap-6 md:grid-cols-2">
+												<section>
+													<h3 class="font-semibold">Current settings</h3>
+													<dl class="mt-2 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1">
+														<dt class="text-gray-600">Transport</dt>
+														<dd>{ formatTransports(channel.Transport.ControlProtocols) }</dd>
+														<dt class="text-gray-600">Video input</dt>
+														<dd>{ fmt.Sprintf("%d", channel.Video.InputChannelID) }</dd>
+														<dt class="text-gray-600">Rate control</dt>
+														<dd>{ channel.Video.QualityControl }</dd>
+														<dt class="text-gray-600">VBR range</dt>
+														<dd>{ fmt.Sprintf("%d–%d kbps", channel.Video.VBRLowerCap, channel.Video.VBRUpperCap) }</dd>
+														<dt class="text-gray-600">Frame rate</dt>
+														<dd>{ formatFrameRate(channel.Video.MaxFrameRate) }</dd>
+														<dt class="text-gray-600">GOP length</dt>
+														<dd>{ fmt.Sprintf("%d", channel.Video.GOVLength) }</dd>
+														<dt class="text-gray-600">Snapshot format</dt>
+														<dd>{ channel.Video.SnapshotImageType }</dd>
+														<dt class="text-gray-600">Smart codec</dt>
+														<dd>{ enabledLabel(channel.Video.SmartCodec.Enabled) }</dd>
+														<dt class="text-gray-600">Audio input</dt>
+														<dd>{ fmt.Sprintf("%d", channel.Audio.InputChannelID) }</dd>
+													</dl>
+												</section>
+												<section>
+													<h3 class="font-semibold">Supported values</h3>
+													<div id={ fmt.Sprintf("channel-%d-capabilities", channel.ID) } class="mt-2 text-gray-600">Loading capabilities…</div>
+												</section>
+											</div>
+										</details>
+									</td>
+								</tr>
+							}
+						</tbody>
+					}
+				</table>
+			</div>
 		</main>
 	}
+}
+
+templ ChannelCapabilities(capability isapi.StreamingChannelCapabilities) {
+	<dl class="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1 text-black">
+		<dt class="text-gray-600">Codecs</dt>
+		<dd>{ formatOptions(capability.Video.CodecType.Options) }</dd>
+		<dt class="text-gray-600">Resolutions</dt>
+		<dd>{ formatResolutions(capability.Video.ResolutionWidth.Options, capability.Video.ResolutionHeight.Options) }</dd>
+		<dt class="text-gray-600">Rate control</dt>
+		<dd>{ formatOptions(capability.Video.QualityControl.Options) }</dd>
+		<dt class="text-gray-600">Quality levels</dt>
+		<dd>{ formatOptions(capability.Video.FixedQuality.Options) }</dd>
+		<dt class="text-gray-600">Bitrate</dt>
+		<dd>{ fmt.Sprintf("%d–%d kbps", capability.Video.ConstantBitRate.Min, capability.Video.ConstantBitRate.Max) }</dd>
+		<dt class="text-gray-600">Frame rates</dt>
+		<dd>{ formatFrameRateOptions(capability.Video.MaxFrameRate.Options) }</dd>
+		<dt class="text-gray-600">SVC modes</dt>
+		<dd>{ formatOptions(capability.Video.SVC.Mode.Options) }</dd>
+		<dt class="text-gray-600">Picture by URL</dt>
+		<dd>{ enabledLabel(capability.IsSupportPictureByURL) }</dd>
+	</dl>
 }
