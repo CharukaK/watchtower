@@ -88,10 +88,6 @@ func (c *Client) AddPath(ctx context.Context, name string, config PathConfig) er
 	return c.writePath(ctx, "/v3/config/paths/add/", name, config)
 }
 
-func (c *Client) ReplacePath(ctx context.Context, name string, config PathConfig) error {
-	return c.writePath(ctx, "/v3/config/paths/replace/", name, config)
-}
-
 func (c *Client) writePath(ctx context.Context, prefix, name string, config PathConfig) error {
 	ctx, cancel := context.WithTimeout(ctx, requestTimeout)
 	defer cancel()

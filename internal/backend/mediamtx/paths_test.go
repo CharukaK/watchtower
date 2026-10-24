@@ -38,7 +38,7 @@ func TestClientAPI(t *testing.T) {
 				t.Errorf("escaped path = %q", r.URL.EscapedPath())
 			}
 			_, _ = w.Write([]byte(`{"name":"camera one","source":"rtsp://dvr/stream","sourceOnDemand":true}`))
-		case "POST /v3/config/paths/add/camera-1", "POST /v3/config/paths/replace/camera-1":
+		case "POST /v3/config/paths/add/camera-1":
 			if r.Header.Get("Content-Type") != "application/json" {
 				t.Errorf("content type = %q", r.Header.Get("Content-Type"))
 			}
@@ -100,9 +100,6 @@ func TestClientAPI(t *testing.T) {
 		RTSPTransport:              "tcp",
 	}
 	if err := client.AddPath(ctx, "camera-1", desired); err != nil {
-		t.Fatal(err)
-	}
-	if err := client.ReplacePath(ctx, "camera-1", desired); err != nil {
 		t.Fatal(err)
 	}
 	if err := client.DeletePath(ctx, "missing"); err != nil {
