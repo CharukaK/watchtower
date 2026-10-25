@@ -1,0 +1,25 @@
+package dashboard
+
+import "fmt"
+
+templ Player(webRTCBaseURL string, channelID int) {
+	<!doctype html>
+	<html lang="en">
+		<head>
+			<meta charset="utf-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1"/>
+			<title>{ fmt.Sprintf("Camera stream %d", channelID) }</title>
+			<style>
+				html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #050607; }
+				video { width: 100%; height: 100%; display: block; object-fit: fill; background: #050607; }
+				#message { position: absolute; inset: 0; display: grid; place-items: center; padding: 20px; color: white; font: 600 16px/1.4 system-ui, sans-serif; text-align: center; pointer-events: none; }
+			</style>
+			<script defer src={ templ.SafeURL(fmt.Sprintf("%s/channel-%d/reader.js", webRTCBaseURL, channelID)) }></script>
+			<script defer src="/static/player.js"></script>
+		</head>
+		<body data-whep-url={ fmt.Sprintf("%s/channel-%d/whep", webRTCBaseURL, channelID) }>
+			<video id="video"></video>
+			<div id="message" role="status"></div>
+		</body>
+	</html>
+}

@@ -15,6 +15,15 @@ import (
 func New(isapiClient *isapi.Client, mediamtxClient *mediamtx.Client) http.Handler {
 	mux := http.NewServeMux()
 	mux.Handle("GET /static/", http.FileServer(http.FS(web.Static)))
+	mux.HandleFunc("GET /player/{id}", func(w http.ResponseWriter, r *http.Request) {
+		id := r.PathValue("id")
+		channelID, err := strconv.Atoi(id)
+		if err != nil || channelID < 1 {
+			http.Error(w, "invalid channel id", http.StatusBadRequest)
+			return
+		}
+		templ.Handler(dashboard.Player(mediamtxClient.WebRTCBaseURL(), channelID)).ServeHTTP(w, r)
+	})
 	mux.HandleFunc(
 		"GET /channels/{id}/capabilities",
 		func(w http.ResponseWriter, r *http.Request) {
@@ -64,8 +73,7 @@ func New(isapiClient *isapi.Client, mediamtxClient *mediamtx.Client) http.Handle
 		templ.Handler(dashboard.Dashboard(
 			info,
 			mediamtxInfo,
-			channels,
-			mediamtxClient.WebRTCBaseURL()),
+			channels),
 		).ServeHTTP(w, r)
 	})
 	return mux

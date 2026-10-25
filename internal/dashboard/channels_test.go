@@ -47,6 +47,34 @@ func TestSubstreams(t *testing.T) {
 	}
 }
 
+func TestCameraViews(t *testing.T) {
+	channels := []isapi.StreamingChannel{
+		{ID: 101, Name: "Gate", Enabled: true, Video: isapi.StreamingChannelVideo{InputChannelID: 1, CodecType: "H.265", ResolutionWidth: 1920, ResolutionHeight: 1080}},
+		{ID: 102, Name: "Gate", Enabled: true, Video: isapi.StreamingChannelVideo{InputChannelID: 1, CodecType: "H.264", ResolutionWidth: 640, ResolutionHeight: 360}},
+		{ID: 103, Name: "Gate", Enabled: true, Video: isapi.StreamingChannelVideo{InputChannelID: 1, CodecType: "H.264", ResolutionWidth: 1280, ResolutionHeight: 720}},
+		{ID: 201, Name: "201", Enabled: true, Video: isapi.StreamingChannelVideo{InputChannelID: 2, CodecType: "H.264", ResolutionWidth: 1280, ResolutionHeight: 720}},
+		{ID: 302, Name: "Warehouse", Enabled: false, Video: isapi.StreamingChannelVideo{InputChannelID: 3}},
+	}
+
+	if got := playerURL(102, false); got != "/player/102?controls=false&muted=true&autoplay=true&playsinline=true" {
+		t.Fatalf("player URL = %q", got)
+	}
+
+	cameras := cameraViews(channels)
+	if len(cameras) != 2 {
+		t.Fatalf("got %d cameras, want 2", len(cameras))
+	}
+	if cameras[0].Name != "Gate" || cameras[0].PreviewStreamID != 102 || cameras[0].PreviewStreamURL != playerURL(102, false) || cameras[0].PreviewCodec != "H.264" {
+		t.Fatalf("first camera = %+v, want Gate preview using H.264 substream", cameras[0])
+	}
+	if cameras[0].StreamID != 101 || cameras[0].StreamURL != playerURL(101, true) || cameras[0].Codec != "H.265" {
+		t.Fatalf("first camera = %+v, want detail using main stream 101", cameras[0])
+	}
+	if cameras[1].Name != "Camera 2" || cameras[1].StreamID != 201 {
+		t.Fatalf("second camera = %+v, want fallback camera name and enabled stream", cameras[1])
+	}
+}
+
 func TestGroupChannels(t *testing.T) {
 	channels := []isapi.StreamingChannel{
 		{Name: "201", Video: isapi.StreamingChannelVideo{InputChannelID: 2}},

@@ -77,7 +77,10 @@ func TestServer(t *testing.T) {
 		status       int
 		bodyContains []string
 	}{
-		{path: "/", status: http.StatusOK, bodyContains: []string{"data-on:toggle=", "MediaMTX", "v1.21.2", "Tue, 20 Oct 2026 10:00:00 UTC"}},
+		{path: "/", status: http.StatusOK, bodyContains: []string{"Live cameras", "Recent events", "/player/101?controls=true", "data-signals:screen=", "data-on:toggle=", "MediaMTX", "v1.21.2", "Tue, 20 Oct 2026 10:00:00 UTC"}},
+		{path: "/player/101", status: http.StatusOK, bodyContains: []string{"object-fit: fill", "channel-101/whep", "/static/player.js"}},
+		{path: "/player/nope", status: http.StatusBadRequest, bodyContains: []string{"invalid channel id"}},
+		{path: "/static/player.js", status: http.StatusOK, bodyContains: []string{"MediaMTXWebRTCReader"}},
 		{path: "/static/datastar.js", status: http.StatusOK, bodyContains: []string{"Datastar"}},
 		{path: "/missing", status: http.StatusNotFound},
 	}
