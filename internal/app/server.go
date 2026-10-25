@@ -15,24 +15,29 @@ import (
 func New(isapiClient *isapi.Client, mediamtxClient *mediamtx.Client) http.Handler {
 	mux := http.NewServeMux()
 	mux.Handle("GET /static/", http.FileServer(http.FS(web.Static)))
-	mux.HandleFunc("GET /channels/{id}/capabilities", func(w http.ResponseWriter, r *http.Request) {
-		id := r.PathValue("id")
-		if channelID, err := strconv.Atoi(id); err != nil || channelID < 1 {
-			http.Error(w, "invalid channel id", http.StatusBadRequest)
-			return
-		}
+	mux.HandleFunc(
+		"GET /channels/{id}/capabilities",
+		func(w http.ResponseWriter, r *http.Request) {
+			id := r.PathValue("id")
+			if channelID, err := strconv.Atoi(id); err != nil || channelID < 1 {
+				http.Error(w, "invalid channel id", http.StatusBadRequest)
+				return
+			}
 
-		capability, err := isapiClient.GetChannelCapabilities(r.Context(), id)
-		if err != nil {
-			slog.WarnContext(r.Context(), "failed to get channel capabilities", "channel", id, "error", err)
-			http.Error(w, "capabilities unavailable", http.StatusBadGateway)
-			return
-		}
+			capability, err := isapiClient.GetChannelCapabilities(r.Context(), id)
+			if err != nil {
+				slog.WarnContext(
+					r.Context(),
+					"failed to get channel capabilities",
+					"channel", id, "error", err)
+				http.Error(w, "capabilities unavailable", http.StatusBadGateway)
+				return
+			}
 
-		w.Header().Set("Datastar-Selector", "#channel-"+id+"-capabilities")
-		w.Header().Set("Datastar-Mode", "inner")
-		templ.Handler(dashboard.ChannelCapabilities(capability)).ServeHTTP(w, r)
-	})
+			w.Header().Set("Datastar-Selector", "#channel-"+id+"-capabilities")
+			w.Header().Set("Datastar-Mode", "inner")
+			templ.Handler(dashboard.ChannelCapabilities(capability)).ServeHTTP(w, r)
+		})
 	mux.HandleFunc("GET /channels/{id}/picture", isapiClient.GetPicture)
 	mux.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
 		mediamtxInfo, err := mediamtxClient.GetInfo(r.Context())
@@ -56,7 +61,12 @@ func New(isapiClient *isapi.Client, mediamtxClient *mediamtx.Client) http.Handle
 			return
 		}
 
-		templ.Handler(dashboard.Dashboard(info, mediamtxInfo, channels, mediamtxClient.WebRTCBaseURL())).ServeHTTP(w, r)
+		templ.Handler(dashboard.Dashboard(
+			info,
+			mediamtxInfo,
+			channels,
+			mediamtxClient.WebRTCBaseURL()),
+		).ServeHTTP(w, r)
 	})
 	return mux
 }
