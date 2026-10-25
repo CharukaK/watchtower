@@ -1,0 +1,18 @@
+package dashboard
+
+import "time"
+import "github.com/CharukaK/watchtower/internal/backend/mediamtx"
+
+templ mediamtxSummary(info mediamtx.Info) {
+	<section class="mt-8">
+		<h2 class="text-2xl font-semibold">MediaMTX</h2>
+		<dl class="mt-4 grid gap-x-8 gap-y-2 sm:grid-cols-[max-content_1fr]">
+			<dt class="font-medium">Status</dt>
+			<dd>Running</dd>
+			<dt class="font-medium">Version</dt>
+			<dd>{ info.Version }</dd>
+			<dt class="font-medium">Started</dt>
+			<dd>{ info.Started.Format(time.RFC1123) }</dd>
+		</dl>
+	</section>
+}

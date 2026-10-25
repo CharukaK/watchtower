@@ -2,11 +2,13 @@ package dashboard
 
 import "github.com/CharukaK/watchtower/internal/ui"
 import "github.com/CharukaK/watchtower/internal/backend/isapi"
+import "github.com/CharukaK/watchtower/internal/backend/mediamtx"
 
-templ Dashboard(info isapi.DeviceInfo, channels []isapi.StreamingChannel) {
+templ Dashboard(info isapi.DeviceInfo, mediamtxInfo mediamtx.Info, channels []isapi.StreamingChannel) {
 	@ui.MainLayout("Watchtower - Dashboard") {
 		<main class="mx-auto max-w-6xl p-6">
 			@deviceSummary(info)
+			@mediamtxSummary(mediamtxInfo)
 			@channelsTable(channels)
 		</main>
 	}

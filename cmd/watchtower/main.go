@@ -8,6 +8,7 @@ import (
 
 	"github.com/CharukaK/watchtower/internal/app"
 	"github.com/CharukaK/watchtower/internal/backend/isapi"
+	"github.com/CharukaK/watchtower/internal/backend/mediamtx"
 )
 
 func main() {
@@ -17,7 +18,17 @@ func main() {
 	userName := os.Getenv("USER")
 	password := os.Getenv("PASSWORD")
 
+	mediamtxHost := os.Getenv("MEDIAMTX_HOST")
+	mediamtxUser := os.Getenv("MEDIAMTX_USER")
+	mediamtxPass := os.Getenv("MEDIAMTX_PASSWORD")
+
 	isAPIClient, err := isapi.NewClient(hostUrl, userName, password)
+	if err != nil {
+		slog.Error("invalid configuration provided", "error", err)
+		os.Exit(1)
+	}
+
+	mediamtxClient, err := mediamtx.NewClient(mediamtxHost, mediamtxUser, mediamtxPass)
 	if err != nil {
 		slog.Error("invalid configuration provided", "error", err)
 		os.Exit(1)
@@ -30,7 +41,7 @@ func main() {
 
 	server := &http.Server{
 		Addr:              ":" + port,
-		Handler:           app.New(isAPIClient),
+		Handler:           app.New(isAPIClient, mediamtxClient),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 

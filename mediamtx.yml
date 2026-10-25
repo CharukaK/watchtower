@@ -1,0 +1,32 @@
+api: yes
+apiAddress: :9997
+
+rtspTransports: [tcp]
+
+webrtcAdditionalHosts:
+  - 192.168.68.106
+
+authMethod: internal
+authInternalUsers:
+  # Anonymous media access for local development.
+  - user: any
+    pass:
+    ips: []
+    permissions:
+      - action: publish
+        path:
+      - action: read
+        path:
+      - action: playback
+        path:
+
+  # Control API account. Override the password with
+  # MTX_AUTHINTERNALUSERS_1_PASS before deployment.
+  - user: user
+    pass: password
+    ips: []
+    permissions:
+      - action: api
+
+paths: {}
+

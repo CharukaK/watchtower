@@ -6,12 +6,13 @@ import (
 	"strconv"
 
 	"github.com/CharukaK/watchtower/internal/backend/isapi"
+	"github.com/CharukaK/watchtower/internal/backend/mediamtx"
 	"github.com/CharukaK/watchtower/internal/dashboard"
 	"github.com/CharukaK/watchtower/web"
 	"github.com/a-h/templ"
 )
 
-func New(isapiClient *isapi.Client) http.Handler {
+func New(isapiClient *isapi.Client, mediamtxClient *mediamtx.Client) http.Handler {
 	mux := http.NewServeMux()
 	mux.Handle("GET /static/", http.FileServer(http.FS(web.Static)))
 	mux.HandleFunc("GET /channels/{id}/capabilities", func(w http.ResponseWriter, r *http.Request) {
@@ -34,6 +35,13 @@ func New(isapiClient *isapi.Client) http.Handler {
 	})
 	mux.HandleFunc("GET /channels/{id}/picture", isapiClient.GetPicture)
 	mux.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
+		mediamtxInfo, err := mediamtxClient.GetInfo(r.Context())
+		if err != nil {
+			slog.ErrorContext(r.Context(), "failed to get MediaMTX information", "error", err)
+			http.Error(w, "MediaMTX unavailable", http.StatusBadGateway)
+			return
+		}
+
 		info, err := isapiClient.GetDeviceInfo(r.Context())
 		if err != nil {
 			slog.ErrorContext(r.Context(), "failed to get device information", "error", err)
@@ -48,7 +56,7 @@ func New(isapiClient *isapi.Client) http.Handler {
 			return
 		}
 
-		templ.Handler(dashboard.Dashboard(info, channels)).ServeHTTP(w, r)
+		templ.Handler(dashboard.Dashboard(info, mediamtxInfo, channels)).ServeHTTP(w, r)
 	})
 	return mux
 }

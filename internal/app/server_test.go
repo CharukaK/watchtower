@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/CharukaK/watchtower/internal/backend/isapi"
+	"github.com/CharukaK/watchtower/internal/backend/mediamtx"
 )
 
 func testISAPIClient(t *testing.T, capabilitiesStatus int) (*isapi.Client, *atomic.Int32) {
@@ -42,16 +43,42 @@ func testISAPIClient(t *testing.T, capabilitiesStatus int) (*isapi.Client, *atom
 	return client, &capabilitiesRequests
 }
 
+func testMediaMTXClient(t *testing.T, status int) (*mediamtx.Client, *atomic.Int32) {
+	t.Helper()
+
+	var infoRequests atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		infoRequests.Add(1)
+		if r.URL.Path != "/v3/info" {
+			http.NotFound(w, r)
+			return
+		}
+		if status != http.StatusOK {
+			w.WriteHeader(status)
+			return
+		}
+		_, _ = io.WriteString(w, `{"started":"2026-10-20T10:00:00Z","version":"v1.21.2"}`)
+	}))
+	t.Cleanup(server.Close)
+
+	client, err := mediamtx.NewClient(server.URL, "user", "password")
+	if err != nil {
+		t.Fatal(err)
+	}
+	return client, &infoRequests
+}
+
 func TestServer(t *testing.T) {
 	client, capabilitiesRequests := testISAPIClient(t, http.StatusOK)
-	server := New(client)
+	mediamtxClient, infoRequests := testMediaMTXClient(t, http.StatusOK)
+	server := New(client, mediamtxClient)
 	tests := []struct {
 		path         string
 		status       int
-		bodyContains string
+		bodyContains []string
 	}{
-		{path: "/", status: http.StatusOK, bodyContains: "data-on:toggle="},
-		{path: "/static/datastar.js", status: http.StatusOK, bodyContains: "Datastar"},
+		{path: "/", status: http.StatusOK, bodyContains: []string{"data-on:toggle=", "MediaMTX", "v1.21.2", "Tue, 20 Oct 2026 10:00:00 UTC"}},
+		{path: "/static/datastar.js", status: http.StatusOK, bodyContains: []string{"Datastar"}},
 		{path: "/missing", status: http.StatusNotFound},
 	}
 
@@ -71,14 +98,19 @@ func TestServer(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if tt.bodyContains != "" && !strings.Contains(string(body), tt.bodyContains) {
-				t.Fatalf("body does not contain %q", tt.bodyContains)
+			for _, want := range tt.bodyContains {
+				if !strings.Contains(string(body), want) {
+					t.Fatalf("body does not contain %q", want)
+				}
 			}
 		})
 	}
 
 	if got := capabilitiesRequests.Load(); got != 0 {
 		t.Fatalf("initial dashboard made %d capabilities requests", got)
+	}
+	if got := infoRequests.Load(); got != 1 {
+		t.Fatalf("initial dashboard made %d MediaMTX info requests, want 1", got)
 	}
 
 	request := httptest.NewRequest(http.MethodGet, "/channels/101/capabilities", nil)
@@ -101,11 +133,27 @@ func TestServer(t *testing.T) {
 	}
 }
 
+func TestMediaMTXUnavailable(t *testing.T) {
+	client, _ := testISAPIClient(t, http.StatusOK)
+	mediamtxClient, _ := testMediaMTXClient(t, http.StatusInternalServerError)
+	request := httptest.NewRequest(http.MethodGet, "/", nil)
+	response := httptest.NewRecorder()
+	New(client, mediamtxClient).ServeHTTP(response, request)
+
+	if response.Code != http.StatusBadGateway {
+		t.Fatalf("status = %d, want %d", response.Code, http.StatusBadGateway)
+	}
+	if !strings.Contains(response.Body.String(), "MediaMTX unavailable") {
+		t.Fatalf("body = %q", response.Body.String())
+	}
+}
+
 func TestChannelCapabilitiesFailure(t *testing.T) {
 	client, _ := testISAPIClient(t, http.StatusInternalServerError)
+	mediamtxClient, _ := testMediaMTXClient(t, http.StatusOK)
 	request := httptest.NewRequest(http.MethodGet, "/channels/101/capabilities", nil)
 	response := httptest.NewRecorder()
-	New(client).ServeHTTP(response, request)
+	New(client, mediamtxClient).ServeHTTP(response, request)
 
 	if response.Code != http.StatusBadGateway {
 		t.Fatalf("status = %d, want %d", response.Code, http.StatusBadGateway)
