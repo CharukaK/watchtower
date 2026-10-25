@@ -155,6 +155,16 @@ func TestClientErrors(t *testing.T) {
 	}
 }
 
+func TestWebRTCBaseURL(t *testing.T) {
+	client, err := NewClient("https://media.example:9997", "apiuser", "secret")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := client.WebRTCBaseURL(); got != "https://media.example:8889" {
+		t.Fatalf("WebRTC base URL = %q", got)
+	}
+}
+
 func TestNewClientRejectsInvalidURL(t *testing.T) {
 	for _, apiURL := range []string{"", "localhost:9997", "ftp://localhost", "http://user:pass@localhost:9997", "http://localhost:9997/v3"} {
 		t.Run(apiURL, func(t *testing.T) {

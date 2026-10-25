@@ -66,6 +66,20 @@ func enabledLabel(enabled bool) string {
 	return "Disabled"
 }
 
+func substreams(channels []isapi.StreamingChannel) []isapi.StreamingChannel {
+	streams := make([]isapi.StreamingChannel, 0)
+	for _, channel := range channels {
+		if channel.Enabled && channel.ID%100 == 2 {
+			streams = append(streams, channel)
+		}
+	}
+	return streams
+}
+
+func substreamURL(baseURL string, channelID int) string {
+	return fmt.Sprintf("%s/channel-%d?controls=true&muted=true&autoplay=true&playsinline=true", baseURL, channelID)
+}
+
 func groupChannels(channels []isapi.StreamingChannel) []channelGroup {
 	groups := make([]channelGroup, 0)
 	indexes := make(map[int]int)

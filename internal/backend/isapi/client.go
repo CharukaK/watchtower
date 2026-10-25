@@ -17,14 +17,24 @@ import (
 var ErrUnauthorized = errors.New("hikvision: unauthorized")
 
 type Client struct {
-	baseURL *url.URL
-	http    *http.Client
+	baseURL  *url.URL
+	username string
+	password string
+	http     *http.Client
 }
 
 func (c *Client) endpoint(relativePath string) string {
 	u := *c.baseURL
 	u.Path = strings.TrimRight(u.Path, "/") + "/" +
 		strings.TrimLeft(relativePath, "/")
+	return u.String()
+}
+
+func (c *Client) StreamURL(channelID int) string {
+	u := *c.baseURL
+	u.Scheme = "rtsp"
+	u.Path = fmt.Sprintf("/Streaming/Channels/%d", channelID)
+	u.User = url.UserPassword(c.username, c.password)
 	return u.String()
 }
 
@@ -88,6 +98,8 @@ func NewClient(deviceURL, username, password string) (*Client, error) {
 	}
 
 	c.baseURL.Path = "/ISAPI"
+	c.username = username
+	c.password = password
 
 	transport := http.DefaultTransport.(*http.Transport).Clone()
 	transport.DialContext = (&net.Dialer{

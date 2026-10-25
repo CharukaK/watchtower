@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
 	"os"
@@ -31,6 +32,11 @@ func main() {
 	mediamtxClient, err := mediamtx.NewClient(mediamtxHost, mediamtxUser, mediamtxPass)
 	if err != nil {
 		slog.Error("invalid configuration provided", "error", err)
+		os.Exit(1)
+	}
+
+	if err := app.RegisterStreams(context.Background(), isAPIClient, mediamtxClient); err != nil {
+		slog.Error("failed to register streams", "error", err)
 		os.Exit(1)
 	}
 

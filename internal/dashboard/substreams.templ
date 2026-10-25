@@ -1,0 +1,27 @@
+package dashboard
+
+import "fmt"
+import "github.com/CharukaK/watchtower/internal/backend/isapi"
+
+templ substreamGrid(channels []isapi.StreamingChannel, webRTCBaseURL string) {
+	if len(substreams(channels)) > 0 {
+		<section class="mt-10">
+			<h2 class="text-2xl font-semibold">Live substreams</h2>
+			<div class="mt-4 grid gap-4 md:grid-cols-2">
+				for _, channel := range substreams(channels) {
+					<article class="overflow-hidden rounded-lg border border-gray-200 bg-black">
+						<h3 class="bg-white px-4 py-3 font-semibold">Input channel { fmt.Sprintf("%d", channel.Video.InputChannelID) }</h3>
+						<iframe
+							class="aspect-video w-full border-0"
+							src={ templ.SafeURL(substreamURL(webRTCBaseURL, channel.ID)) }
+							title={ fmt.Sprintf("Live substream for input channel %d", channel.Video.InputChannelID) }
+							loading="lazy"
+							allow="autoplay; fullscreen; picture-in-picture"
+							allowfullscreen
+						></iframe>
+					</article>
+				}
+			</div>
+		</section>
+	}
+}

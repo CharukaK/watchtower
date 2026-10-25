@@ -56,7 +56,7 @@ func New(isapiClient *isapi.Client, mediamtxClient *mediamtx.Client) http.Handle
 			return
 		}
 
-		templ.Handler(dashboard.Dashboard(info, mediamtxInfo, channels)).ServeHTTP(w, r)
+		templ.Handler(dashboard.Dashboard(info, mediamtxInfo, channels, mediamtxClient.WebRTCBaseURL())).ServeHTTP(w, r)
 	})
 	return mux
 }

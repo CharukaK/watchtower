@@ -20,10 +20,11 @@ var (
 )
 
 type Client struct {
-	baseURL  string
-	username string
-	password string
-	http     *http.Client
+	baseURL       string
+	webRTCBaseURL string
+	username      string
+	password      string
+	http          *http.Client
 }
 
 func NewClient(apiURL, username, password string) (*Client, error) {
@@ -48,6 +49,10 @@ func NewClient(apiURL, username, password string) (*Client, error) {
 		return nil, errors.New("MediaMTX API URL must not contain a path")
 	}
 
+	webRTCURL := *u
+	webRTCURL.Host = net.JoinHostPort(u.Hostname(), "8889")
+	webRTCURL.Path = ""
+
 	transport := http.DefaultTransport.(*http.Transport).Clone()
 	transport.DialContext = (&net.Dialer{
 		Timeout:   5 * time.Second,
@@ -56,9 +61,10 @@ func NewClient(apiURL, username, password string) (*Client, error) {
 	transport.ResponseHeaderTimeout = 10 * time.Second
 
 	return &Client{
-		baseURL:  strings.TrimRight(u.String(), "/"),
-		username: username,
-		password: password,
+		baseURL:       strings.TrimRight(u.String(), "/"),
+		webRTCBaseURL: strings.TrimRight(webRTCURL.String(), "/"),
+		username:      username,
+		password:      password,
 		http: &http.Client{
 			Transport: transport,
 			CheckRedirect: func(*http.Request, []*http.Request) error {
@@ -66,6 +72,10 @@ func NewClient(apiURL, username, password string) (*Client, error) {
 			},
 		},
 	}, nil
+}
+
+func (c *Client) WebRTCBaseURL() string {
+	return c.webRTCBaseURL
 }
 
 func (c *Client) do(ctx context.Context, method, path string, query url.Values, input, output any) error {
