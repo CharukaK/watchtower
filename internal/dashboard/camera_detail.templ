@@ -1,0 +1,44 @@
+package dashboard
+
+templ cameraDetail() {
+	<section class="screen" id="camera" aria-labelledby="camera-title" data-show="$screen === 'camera'" style="display: none">
+		<header class="topbar">
+			<div>
+				<button class="button tiny back-button" type="button" data-on:click="$screen = 'dashboard'">← All cameras</button>
+				<h1 id="camera-title" data-text="$cameraName">Camera detail</h1>
+				<p class="muted" id="camera-subtitle" data-text="$cameraMeta">Select a camera from the live dashboard</p>
+			</div>
+			<div class="actions">
+				<button class="button" type="button" data-on:click="$screen = 'replay'">View replay</button>
+				<a class="button primary disabled" id="snapshot-link" href="#" download aria-disabled="true" data-attr:href="$snapshotUrl || '#'" data-attr:aria-disabled="!$snapshotUrl" data-class:disabled="!$snapshotUrl">Take snapshot</a>
+			</div>
+		</header>
+
+		<div class="detail-layout">
+			<section class="panel player-panel">
+				<div class="large-feed" id="detail-feed" data-class:has-player="!!$streamUrl">
+					<div class="placeholder" id="detail-placeholder"><strong>No camera selected</strong>Choose a camera from the dashboard.</div>
+					<iframe id="detail-player" title="Selected live camera" data-attr:src="$streamUrl" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
+					<span class="feed-badge"><span class="status-dot"></span>Live</span>
+				</div>
+				<div class="player-controls"><span class="live-pulse" aria-hidden="true"></span><strong class="tiny">LIVE</strong><span class="player-spacer"></span><span class="tiny muted" id="detail-quality" data-text="$streamUrl ? $cameraCodec + ' · ' + $cameraResolution : 'Waiting for camera'">Waiting for camera</span></div>
+			</section>
+
+			<aside class="detail-sidebar">
+				<section class="panel">
+					<div class="panel-header"><h2>Camera status</h2></div>
+					<div class="stats">
+						<div class="stat"><span class="muted">Connection</span><span class="row"><span class="status-dot"></span>Online</span></div>
+						<div class="stat"><span class="muted">Codec</span><span id="detail-codec" data-text="$cameraCodec">—</span></div>
+						<div class="stat"><span class="muted">Resolution</span><span id="detail-resolution" data-text="$cameraResolution">—</span></div>
+						<div class="stat"><span class="muted">Recording</span><span>Managed by DVR</span></div>
+					</div>
+				</section>
+				<section class="panel">
+					<div class="panel-header"><h2>Latest activity</h2></div>
+					<div class="empty-panel compact"><p class="muted tiny">Event history is not connected yet.</p></div>
+				</section>
+			</aside>
+		</div>
+	</section>
+}

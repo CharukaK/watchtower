@@ -1,0 +1,43 @@
+package dashboard
+
+import "time"
+
+templ replayScreen(cameras []cameraView) {
+	<section class="screen" id="replay" aria-labelledby="replay-title" data-show="$screen === 'replay'" style="display: none">
+		<header class="topbar">
+			<div><h1 id="replay-title">Recording replay</h1><p class="muted">Search the DVR by camera and local time</p></div>
+			<button class="button" type="button" data-on:click="$screen = 'dashboard'">Back to live</button>
+		</header>
+
+		<div class="replay-layout">
+			<aside class="panel filters">
+				<h2>Find recordings</h2>
+				<div class="field">
+					<label for="camera-select">Camera</label>
+					<select class="select" id="camera-select">
+						for _, camera := range cameras {
+							<option>{ camera.Name }</option>
+						}
+					</select>
+				</div>
+				<div class="field"><label for="replay-date">Date</label><input class="input" id="replay-date" type="date" value={ time.Now().Format("2006-01-02") }/></div>
+				<div class="field"><label for="start-time">Start time</label><input class="input" id="start-time" type="time" value="10:00"/></div>
+				<div class="field"><label for="end-time">End time</label><input class="input" id="end-time" type="time" value="13:00"/></div>
+				<button class="button primary full-width" type="button" disabled>Search recordings</button>
+				<p class="muted tiny field-note">Recording search is not connected to the DVR yet.</p>
+			</aside>
+
+			<div class="replay-main">
+				<section class="panel replay-video">
+					<div class="large-feed replay-placeholder"><div class="placeholder"><div><strong>Playback unavailable</strong>Connect the ISAPI recording search and playback relay to enable replay.</div></div></div>
+					<div class="player-controls"><button class="button icon" type="button" disabled aria-label="Play">▶</button><div class="scrubber" aria-hidden="true"></div><span class="tiny muted">No recording selected</span></div>
+				</section>
+				<section class="panel timeline-wrap">
+					<div class="panel-title-row"><h2>Recording timeline</h2><span class="muted tiny">No segments</span></div>
+					<div class="timeline-labels"><span>10:00</span><span>11:00</span><span>12:00</span><span>13:00</span></div>
+					<div class="timeline empty" aria-label="Recording timeline"></div>
+				</section>
+			</div>
+		</div>
+	</section>
+}
