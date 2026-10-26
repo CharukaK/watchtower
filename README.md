@@ -1,10 +1,10 @@
 # Watchtower
 
-Watchtower is a local web dashboard for Hikvision-compatible DVRs and cameras. It reads device and channel details through ISAPI, registers enabled RTSP streams with MediaMTX, and plays them in the browser over WebRTC.
+Watchtower is a local web dashboard for Hikvision-compatible DVRs and cameras.
+It reads device and channel details through ISAPI, registers enabled RTSP
+streams with MediaMTX, and plays them in the browser over WebRTC.
 
 ![Watchtower dashboard with synthetic camera data](docs/watchtower-dashboard.png)
-
-_The screenshot uses generated device names and demo feeds. It contains no live camera footage or device information._
 
 ## What works
 
@@ -24,7 +24,9 @@ The recent-events and recording-replay screens are placeholders. They are not co
 - [MediaMTX](https://github.com/bluenviron/mediamtx)
 - A Hikvision-compatible device with ISAPI enabled
 
-The machine running Watchtower must be able to reach both the device and the MediaMTX API. Browsers must also be able to reach MediaMTX's WebRTC listener on port `8889`.
+The machine running Watchtower must be able to reach both the device and the
+MediaMTX API. Browsers must also be able to reach MediaMTX's WebRTC listener on
+port `8889`.
 
 ## Setup
 
@@ -34,7 +36,11 @@ Install the frontend tools:
 npm ci
 ```
 
-Review `mediamtx.yml` before starting MediaMTX. Set `webrtcAdditionalHosts` to an address that browsers can use to reach the MediaMTX server. The included configuration is intended for local development and allows anonymous media access, so change its authentication settings before exposing it to another network.
+Review `mediamtx.yml` before starting MediaMTX. Set `webrtcAdditionalHosts` to
+an address that browsers can use to reach the MediaMTX server. The included
+configuration is intended for local development and allows anonymous media
+access, so change its authentication settings before exposing it to another
+network.
 
 Start MediaMTX with the project configuration:
 
@@ -54,7 +60,9 @@ MEDIAMTX_PASSWORD=password \
 make dev
 ```
 
-Open <http://localhost:7331>. Air proxies the application through port `7331` during development and reloads it when Go, templ, CSS, or JavaScript files change.
+Open <http://localhost:7331>. Air proxies the application through port `7331`
+during development and reloads it when Go, templ, CSS, or JavaScript files
+change.
 
 ## Configuration
 
@@ -68,7 +76,8 @@ Open <http://localhost:7331>. Air proxies the application through port `7331` du
 | `MEDIAMTX_PASSWORD` | Yes | MediaMTX API password. |
 | `PORT` | No | Watchtower HTTP port. Defaults to `8080`. |
 
-Watchtower adds one on-demand MediaMTX path per enabled channel, named `channel-<channel ID>`. Existing paths with those names are left unchanged.
+Watchtower adds one on-demand MediaMTX path per enabled channel, named
+`channel-<channel ID>`. Existing paths with those names are left unchanged.
 
 ## Build and test
 
@@ -77,7 +86,9 @@ make build
 make test
 ```
 
-The production binary is written to `build/watchtower`. Run it with the same environment variables shown above, then open port `8080` or the value set in `PORT`.
+The production binary is written to `build/watchtower`. Run it with the same
+environment variables shown above, then open port `8080` or the value set in
+`PORT`.
 
 Other useful commands:
 
@@ -89,7 +100,9 @@ make clean     # remove generated build output
 
 ## Security notes
 
-- Keep Watchtower and the MediaMTX control API on a trusted network unless you add access controls in front of them.
+- Keep Watchtower and the MediaMTX control API on a trusted network unless you
+add access controls in front of them.
 - Replace the development credentials in `mediamtx.yml` before deployment.
-- Device credentials are placed in MediaMTX's in-memory RTSP path configuration so MediaMTX can connect to the device.
+- Device credentials are placed in MediaMTX's in-memory RTSP path configuration
+so MediaMTX can connect to the device.
 - Do not put credentials in `HOST_URL` or `MEDIAMTX_HOST`.
