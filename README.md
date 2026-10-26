@@ -24,9 +24,10 @@ The recent-events and recording-replay screens are placeholders. They are not co
 - [MediaMTX](https://github.com/bluenviron/mediamtx)
 - A Hikvision-compatible device with ISAPI enabled
 
-The machine running Watchtower must be able to reach both the device and the
-MediaMTX API. Browsers must also be able to reach MediaMTX's WebRTC listener on
-port `8889`.
+The machine running Watchtower must be able to reach the device and MediaMTX on
+API port `9997` and WebRTC HTTP port `8889`. Browsers reach those WebRTC HTTP
+endpoints through Watchtower's `/media/` proxy, but must still be able to reach
+MediaMTX's advertised WebRTC media address.
 
 ## Setup
 
@@ -37,10 +38,10 @@ npm ci
 ```
 
 Review `mediamtx.yml` before starting MediaMTX. Set `webrtcAdditionalHosts` to
-an address that browsers can use to reach the MediaMTX server. The included
-configuration is intended for local development and allows anonymous media
-access, so change its authentication settings before exposing it to another
-network.
+the LAN address of the machine running MediaMTX. The included configuration uses
+`192.168.68.104`. Change it if that address changes. The configuration is
+intended for local development and allows anonymous media access, so change its
+authentication settings before exposing it to another network.
 
 Start MediaMTX with the project configuration:
 
@@ -60,9 +61,12 @@ MEDIAMTX_PASSWORD=password \
 make dev
 ```
 
-Open <http://localhost:7331>. Air proxies the application through port `7331`
-during development and reloads it when Go, templ, CSS, or JavaScript files
-change.
+Open <http://localhost:7331> on the same machine, or
+<http://192.168.68.104:7331> from another device on the same network. Air
+proxies the application through port `7331` during development and reloads it
+when Go, templ, CSS, or JavaScript files change. Watchtower proxies browser
+requests under `/media/` to MediaMTX port `8889`. Allow TCP port `7331` and UDP
+port `8189` through the host firewall.
 
 ## Configuration
 
@@ -78,6 +82,17 @@ change.
 
 Watchtower adds one on-demand MediaMTX path per enabled channel, named
 `channel-<channel ID>`. Existing paths with those names are left unchanged.
+
+For a container deployment, use the MediaMTX service name for the private API:
+
+```sh
+MEDIAMTX_HOST=http://mediamtx:9997
+```
+
+Watchtower derives the internal WebRTC HTTP target as `http://mediamtx:8889`.
+Publish Watchtower's HTTP port and MediaMTX's UDP port `8189`; the MediaMTX API
+and HTTP port can remain on the container network. Set `webrtcAdditionalHosts`
+to an address that browsers outside the container network can reach.
 
 ## Build and test
 

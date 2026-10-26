@@ -4,6 +4,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -78,9 +79,9 @@ func TestServer(t *testing.T) {
 		bodyContains []string
 	}{
 		{path: "/", status: http.StatusOK, bodyContains: []string{"Live cameras", "Recent events", "/player/101?controls=true", "data-signals:screen=", "data-on:toggle=", "MediaMTX", "v1.21.2", "Tue, 20 Oct 2026 10:00:00 UTC"}},
-		{path: "/player/101", status: http.StatusOK, bodyContains: []string{"object-fit: fill", "channel-101/whep", "/static/player.js"}},
+		{path: "/player/101", status: http.StatusOK, bodyContains: []string{"object-fit: fill", `data-channel-id="101"`, "/static/player.js"}},
 		{path: "/player/nope", status: http.StatusBadRequest, bodyContains: []string{"invalid channel id"}},
-		{path: "/static/player.js", status: http.StatusOK, bodyContains: []string{"MediaMTXWebRTCReader"}},
+		{path: "/static/player.js", status: http.StatusOK, bodyContains: []string{"MediaMTXWebRTCReader", "/media/channel-"}},
 		{path: "/static/datastar.js", status: http.StatusOK, bodyContains: []string{"Datastar"}},
 		{path: "/missing", status: http.StatusNotFound},
 	}
@@ -133,6 +134,29 @@ func TestServer(t *testing.T) {
 	}
 	if got := capabilitiesRequests.Load(); got != 1 {
 		t.Fatalf("expanded channel made %d capabilities requests, want 1", got)
+	}
+}
+
+func TestMediaProxy(t *testing.T) {
+	media := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Location", "http://mediamtx:8889/channel-101/whep/session-id")
+		_, _ = io.WriteString(w, r.Method+" "+r.URL.RequestURI())
+	}))
+	t.Cleanup(media.Close)
+
+	target, err := url.Parse(media.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	request := httptest.NewRequest(http.MethodPatch, "/media/channel-101/whep?session=1", nil)
+	response := httptest.NewRecorder()
+	newHandler(nil, nil, target).ServeHTTP(response, request)
+
+	if response.Code != http.StatusOK || response.Body.String() != "PATCH /channel-101/whep?session=1" {
+		t.Fatalf("proxy response = %d %q", response.Code, response.Body.String())
+	}
+	if got := response.Header().Get("Location"); got != "/media/channel-101/whep/session-id" {
+		t.Fatalf("proxy Location = %q", got)
 	}
 }
 

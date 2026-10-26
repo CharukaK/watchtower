@@ -3,6 +3,8 @@ package app
 import (
 	"log/slog"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"strconv"
 
 	"github.com/CharukaK/watchtower/internal/backend/isapi"
@@ -13,7 +15,23 @@ import (
 )
 
 func New(isapiClient *isapi.Client, mediamtxClient *mediamtx.Client) http.Handler {
+	return newHandler(isapiClient, mediamtxClient, mediamtxClient.WebRTCURL())
+}
+
+func newHandler(isapiClient *isapi.Client, mediamtxClient *mediamtx.Client, mediaTarget *url.URL) http.Handler {
 	mux := http.NewServeMux()
+	mediaProxy := httputil.NewSingleHostReverseProxy(mediaTarget)
+	mediaProxy.ModifyResponse = func(response *http.Response) error {
+		location, err := url.Parse(response.Header.Get("Location"))
+		if err == nil && (location.Host != "" || len(location.Path) > 0 && location.Path[0] == '/') {
+			location.Scheme = ""
+			location.Host = ""
+			location.Path = "/media" + location.Path
+			response.Header.Set("Location", location.String())
+		}
+		return nil
+	}
+	mux.Handle("/media/", http.StripPrefix("/media", mediaProxy))
 	mux.Handle("GET /static/", http.FileServer(http.FS(web.Static)))
 	mux.HandleFunc("GET /player/{id}", func(w http.ResponseWriter, r *http.Request) {
 		id := r.PathValue("id")
@@ -22,7 +40,7 @@ func New(isapiClient *isapi.Client, mediamtxClient *mediamtx.Client) http.Handle
 			http.Error(w, "invalid channel id", http.StatusBadRequest)
 			return
 		}
-		templ.Handler(dashboard.Player(mediamtxClient.WebRTCBaseURL(), channelID)).ServeHTTP(w, r)
+		templ.Handler(dashboard.Player(channelID)).ServeHTTP(w, r)
 	})
 	mux.HandleFunc(
 		"GET /channels/{id}/capabilities",

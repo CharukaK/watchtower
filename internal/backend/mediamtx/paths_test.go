@@ -155,13 +155,13 @@ func TestClientErrors(t *testing.T) {
 	}
 }
 
-func TestWebRTCBaseURL(t *testing.T) {
+func TestWebRTCURL(t *testing.T) {
 	client, err := NewClient("https://media.example:9997", "apiuser", "secret")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got := client.WebRTCBaseURL(); got != "https://media.example:8889" {
-		t.Fatalf("WebRTC base URL = %q", got)
+	if got := client.WebRTCURL().String(); got != "https://media.example:8889" {
+		t.Fatalf("WebRTC URL = %q", got)
 	}
 }
 

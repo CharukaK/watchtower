@@ -20,11 +20,11 @@ var (
 )
 
 type Client struct {
-	baseURL       string
-	webRTCBaseURL string
-	username      string
-	password      string
-	http          *http.Client
+	baseURL   string
+	webRTCURL url.URL
+	username  string
+	password  string
+	http      *http.Client
 }
 
 func NewClient(apiURL, username, password string) (*Client, error) {
@@ -61,10 +61,10 @@ func NewClient(apiURL, username, password string) (*Client, error) {
 	transport.ResponseHeaderTimeout = 10 * time.Second
 
 	return &Client{
-		baseURL:       strings.TrimRight(u.String(), "/"),
-		webRTCBaseURL: strings.TrimRight(webRTCURL.String(), "/"),
-		username:      username,
-		password:      password,
+		baseURL:   strings.TrimRight(u.String(), "/"),
+		webRTCURL: webRTCURL,
+		username:  username,
+		password:  password,
 		http: &http.Client{
 			Transport: transport,
 			CheckRedirect: func(*http.Request, []*http.Request) error {
@@ -74,8 +74,9 @@ func NewClient(apiURL, username, password string) (*Client, error) {
 	}, nil
 }
 
-func (c *Client) WebRTCBaseURL() string {
-	return c.webRTCBaseURL
+func (c *Client) WebRTCURL() *url.URL {
+	u := c.webRTCURL
+	return &u
 }
 
 func (c *Client) do(ctx context.Context, method, path string, query url.Values, input, output any) error {
