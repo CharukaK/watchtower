@@ -43,15 +43,46 @@ templ dashboardShell(
 
 templ dashboardSidebar(mediamtxInfo mediamtx.Info, cameras []cameraView) {
 	<aside class="sidebar">
-		<div class="brand"><span class="brand-mark" aria-hidden="true"></span>Watchtower</div>
+		<div class="brand">
+			<span class="brand-mark" aria-hidden="true"></span>
+			Watchtower
+		</div>
 		<nav class="nav" aria-label="Main navigation">
-			<button class="nav-button" type="button" data-class:active="$screen === 'dashboard'" data-on:click="$screen = 'dashboard'">Live dashboard</button>
-			<button class="nav-button" type="button" data-class:active="$screen === 'camera'" data-on:click="$screen = 'camera'">Camera detail</button>
-			<button class="nav-button" type="button" data-class:active="$screen === 'replay'" data-on:click="$screen = 'replay'">Replay</button>
+			<button
+				class="nav-button"
+				type="button"
+				data-class:active="$screen === 'dashboard'"
+				data-on:click="$screen = 'dashboard'"
+			>
+				Live dashboard
+			</button>
+			<button
+				class="nav-button"
+				type="button"
+				data-class:active="$screen === 'camera'"
+				data-on:click="$screen = 'camera'"
+			>
+				Camera detail
+			</button>
+			<button
+				class="nav-button"
+				type="button"
+				data-class:active="$screen === 'replay'"
+				data-on:click="$screen = 'replay'"
+			>
+				Replay
+			</button>
 		</nav>
 		<div class="system-card">
-			<div class="status-row"><span class="status-dot"></span><strong>DVR connected</strong></div>
-			<p class="muted tiny">{ fmt.Sprintf("%d cameras available", len(cameras)) }<br/>MediaMTX { mediamtxInfo.Version }</p>
+			<div class="status-row">
+				<span class="status-dot"></span>
+				<strong>DVR connected</strong>
+			</div>
+			<p class="muted tiny">
+				{ fmt.Sprintf("%d cameras available", len(cameras)) }
+				<br/>
+				MediaMTX { mediamtxInfo.Version }
+			</p>
 		</div>
 	</aside>
 }

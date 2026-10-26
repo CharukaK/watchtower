@@ -11,7 +11,12 @@ templ liveDashboard(
 	channels []isapi.StreamingChannel,
 	cameras []cameraView,
 ) {
-	<section class="screen" id="dashboard" aria-labelledby="dashboard-title" data-show="$screen === 'dashboard'">
+	<section
+		class="screen"
+		id="dashboard"
+		aria-labelledby="dashboard-title"
+		data-show="$screen === 'dashboard'"
+	>
 		<header class="topbar">
 			<div>
 				<h1 id="dashboard-title">Live cameras</h1>
@@ -23,12 +28,21 @@ templ liveDashboard(
 					<option value="2">2 columns</option>
 					<option value="3">3 columns</option>
 				</select>
-				<button class="button" type="button" data-on:click="window.location.reload()">Refresh</button>
+				<button
+					class="button"
+					type="button"
+					data-on:click="window.location.reload()"
+				>
+					Refresh
+				</button>
 			</div>
 		</header>
-
 		<div class="dashboard-layout">
-			<div class="camera-grid" id="camera-grid" data-class:compact="$columns === '3'">
+			<div
+				class="camera-grid"
+				id="camera-grid"
+				data-class:compact="$columns === '3'"
+			>
 				if len(cameras) == 0 {
 					<div class="empty-state panel">
 						<h2>No cameras available</h2>
@@ -39,22 +53,35 @@ templ liveDashboard(
 					@cameraCard(camera)
 				}
 			</div>
-
 			<aside class="event-panel">
-				<div class="panel-header"><h2>Recent events</h2><span class="muted tiny">Not connected</span></div>
+				<div class="panel-header">
+					<h2>Recent events</h2>
+					<span class="muted tiny">Not connected</span>
+				</div>
 				<div class="empty-panel">
 					<span class="event-icon" aria-hidden="true">○</span>
 					<strong>No live event feed</strong>
-					<p class="muted tiny">Motion and video-loss events will appear here after the ISAPI event stream is connected.</p>
+					<p class="muted tiny">
+						Motion and video-loss events will appear here after the ISAPI event stream is connected.
+					</p>
 				</div>
 			</aside>
 		</div>
-
 		<details class="panel admin-details">
 			<summary>Device and stream details</summary>
 			<div class="system-summary">
-				<div><span class="muted tiny">Device</span><strong>{ info.Name }</strong><span class="muted tiny">{ info.Model } · { info.Firmware }</span></div>
-				<div><span class="muted tiny">Media server</span><strong>MediaMTX { mediamtxInfo.Version }</strong><span class="muted tiny">Started { mediamtxInfo.Started.Format(time.RFC1123) }</span></div>
+				<div>
+					<span class="muted tiny">Device</span>
+					<strong>{ info.Name }</strong>
+					<span class="muted tiny">{ info.Model } · { info.Firmware }</span>
+				</div>
+				<div>
+					<span class="muted tiny">Media server</span>
+					<strong>MediaMTX { mediamtxInfo.Version }</strong>
+					<span class="muted tiny">
+						Started { mediamtxInfo.Started.Format(time.RFC1123) }
+					</span>
+				</div>
 			</div>
 			@channelsTable(channels)
 		</details>
@@ -85,10 +112,16 @@ templ cameraCard(camera cameraView) {
 				allow="autoplay; fullscreen; picture-in-picture"
 				allowfullscreen
 			></iframe>
-			<span class="feed-badge"><span class="status-dot"></span>Live</span>
+			<span class="feed-badge">
+				<span class="status-dot"></span>
+				Live
+			</span>
 		</div>
 		<div class="camera-meta">
-			<div><h2>{ camera.Name }</h2><p>{ fmt.Sprintf("Camera %d · Online", camera.InputChannelID) }</p></div>
+			<div>
+				<h2>{ camera.Name }</h2>
+				<p>{ fmt.Sprintf("Camera %d · Online", camera.InputChannelID) }</p>
+			</div>
 			<span class="quality">{ camera.PreviewCodec }</span>
 		</div>
 	</article>

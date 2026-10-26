@@ -1,0 +1,26 @@
+services:
+  mediamtx:
+    image: bluenviron/mediamtx:1
+    restart: unless-stopped
+    environment:
+      MTX_WEBRTCADDITIONALHOSTS: ${WEBRTC_ADDITIONAL_HOST:?Set WEBRTC_ADDITIONAL_HOST in .env}
+      MTX_AUTHINTERNALUSERS_1_PASS: ${MEDIAMTX_PASSWORD:?Set MEDIAMTX_PASSWORD in .env}
+    ports:
+      - "8189:8189/udp"
+    volumes:
+      - ./mediamtx.yml:/mediamtx.yml:ro
+
+  watchtower:
+    build: .
+    restart: on-failure
+    depends_on:
+      - mediamtx
+    environment:
+      HOST_URL: ${HOST_URL:?Set HOST_URL in .env}
+      USER: ${DVR_USER:?Set DVR_USER in .env}
+      PASSWORD: ${DVR_PASSWORD:?Set DVR_PASSWORD in .env}
+      MEDIAMTX_HOST: http://mediamtx:9997
+      MEDIAMTX_USER: user
+      MEDIAMTX_PASSWORD: ${MEDIAMTX_PASSWORD:?Set MEDIAMTX_PASSWORD in .env}
+    ports:
+      - "${WATCHTOWER_BIND_ADDRESS:-127.0.0.1}:${WATCHTOWER_PORT:-8080}:8080"

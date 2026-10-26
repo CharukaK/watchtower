@@ -3,8 +3,8 @@ apiAddress: :9997
 
 rtspTransports: [tcp]
 
-webrtcAdditionalHosts:
-  - 192.168.68.104
+# Set MTX_WEBRTCADDITIONALHOSTS to an address browsers can reach.
+webrtcAdditionalHosts: []
 
 authMethod: internal
 authInternalUsers:

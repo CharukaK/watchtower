@@ -1,0 +1,8 @@
+.git
+.env
+build
+node_modules
+tmp
+watchtower
+*_templ.go
+web/static/app.css
